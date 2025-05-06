@@ -115,19 +115,23 @@ main:
     mov     [bitwise_not], rax
 
 LOOP_Block:
-    ; accumulator : MUL increment
-    mov     rax, [accumulator]
-    imul    rax, [increment]
+    ; Multiply accumulator by increment using an efficient register-based approach
+    imul    rax, [accumulator], [increment]
     mov     [accumulator], rax
 
-    ; counter : SUB 1
-    mov     rax, [counter]
-    sub     rax, 1
-    mov     [counter], rax
+    ; Decrement counter directly
+    dec     qword [counter]
 
-    ; comparison : COMPARE counter,0
-    cmp     rax, 0
-    jne     LOOP_Block                           ; JUMP_IF → LOOP_Block
+    ; Check if counter has reached zero, and exit loop if so
+    jnz     LOOP_Block  ; If counter ≠ 0, continue looping
+
+exit_point:
+    ; Display results
+    mov     rcx, fmt_accumulator
+    mov     rdx, [accumulator]
+    xor     rax, rax
+    call    printf
+
 
     ; ---------- Display Results ----------
     ; DISPLAY accumulator
@@ -173,4 +177,82 @@ LOOP_Block:
     call    printf
 
     xor     rax, rax
+    ret
+
+section .data
+    fmt_result       db "Final Result: %lld", 10, 0
+    fmt_operations   db "Bitwise: AND=%lld OR=%lld XOR=%lld NOT=%lld SHL=%lld SHR=%lld", 10, 0
+
+section .bss
+    counter         resq 1
+    increment       resq 1
+    accumulator     resq 1
+    mask            resq 1
+    shifted_left    resq 1
+    shifted_right   resq 1
+    bitwise_and     resq 1
+    bitwise_or      resq 1
+    bitwise_xor     resq 1
+    bitwise_not     resq 1
+
+section .text
+    extern printf
+    global  main
+
+main:
+    ; -------- Initialize Variables --------
+    mov rax, 20                  ; SET counter → 20
+    mov [counter], rax
+    mov rax, 3                   ; SET increment → 3
+    mov [increment], rax
+    mov rax, 1                   ; SET accumulator → 1
+    mov [accumulator], rax
+    mov rax, 255                 ; SET mask → 255
+    mov [mask], rax
+
+    ; -------- Bitwise Operations --------
+    shl rax, 2
+    mov [shifted_left], rax       ; SHIFT_LEFT increment, 2 → shifted_left
+
+    shr rax, 1
+    mov [shifted_right], rax      ; SHIFT_RIGHT shifted_left, 1 → shifted_right
+
+    and rax, [mask]
+    mov [bitwise_and], rax        ; AND shifted_left, mask → bitwise_and
+
+    or rax, [accumulator]
+    mov [bitwise_or], rax         ; OR shifted_left, accumulator → bitwise_or
+
+    xor rax, [mask]
+    mov [bitwise_xor], rax        ; XOR shifted_left, mask → bitwise_xor
+
+    not rax
+    mov [bitwise_not], rax        ; NOT accumulator → bitwise_not
+
+LOOP_Block:
+    imul rax, [accumulator], [increment]
+    mov [accumulator], rax        ; MUL accumulator, increment
+
+    dec qword [counter]           ; Decrement counter
+    jnz LOOP_Block                ; Continue looping if counter ≠ 0
+
+exit_point:
+    ; -------- Display Results --------
+    mov rcx, fmt_result
+    mov rdx, [accumulator]
+    xor rax, rax
+    call printf
+
+    ; Optimized output grouping
+    mov rcx, fmt_operations
+    mov rdx, [bitwise_and]
+    mov r8,  [bitwise_or]
+    mov r9,  [bitwise_xor]
+    mov r10, [bitwise_not]
+    mov r11, [shifted_left]
+    mov r12, [shifted_right]
+    xor rax, rax
+    call printf
+
+    xor rax, rax
     ret

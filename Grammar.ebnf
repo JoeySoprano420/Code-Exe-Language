@@ -256,3 +256,70 @@ exit_point:
 
     xor rax, rax
     ret
+
+LOOP_Block:
+    imul rax, [accumulator], [increment]   ; Multiply directly in register
+    mov  [accumulator], rax                ; Store result
+    
+    dec  rax                               ; Inline decrement (reduces memory access)
+    mov  [counter], rax                    ; Store updated counter
+    
+    jnz  LOOP_Block                        ; Branch efficiently
+
+main:
+    ; -------- Initialize Variables --------
+    mov rax, 20                  ; Counter starts at 20
+    mov [counter], rax
+
+    mov rax, 3                   ; Increment value
+    mov [increment], rax
+
+    mov rax, 1                   ; Accumulator begins at 1
+    mov [accumulator], rax
+
+    mov rax, 255                 ; Mask for bitwise operations
+    mov [mask], rax
+
+section .text
+    global parallel_process
+parallel_process:
+    movdqa xmm0, [accumulator]    ; Load accumulator in SIMD register
+    movdqa xmm1, [increment]      ; Load increment in SIMD register
+    pmuludq xmm0, xmm1            ; Parallel multiply
+    movdqa [accumulator], xmm0    ; Store back result
+    ret
+
+spinlock:
+    mov eax, 1                  ; Set lock state
+    xchg eax, [lock]            ; Atomic exchange (lock acquire)
+    test eax, eax
+    jnz spinlock                ; If locked, wait
+
+    ; ---- Critical Section ----
+    mov [shared_data], rax       ; Modify shared resource safely
+
+    mov dword [lock], 0          ; Release lock
+
+lock inc qword [counter]       ; Atomic increment
+
+mov rax, 1                     
+lock xadd qword [counter], rax  ; Atomic addition
+
+retry:
+    mov rax, [shared_data]       ; Load current value
+    add rax, 1                   ; Increment safely
+    lock cmpxchg [shared_data], rax  ; Atomic compare and swap
+    jnz retry                    ; Retry if another thread modified the value
+
+section .bss
+    .align 64
+    shared_data resq 8  ; Ensures alignment to 64-byte boundary
+
+prefetchnta [shared_data]  ; Non-temporal prefetch (avoids polluting cache)
+
+retry:
+    mov rax, [shared_data]       ; Load current value
+    add rax, 1                   ; Increment safely
+    lock cmpxchg [shared_data], rax  ; Atomic compare and swap
+    jnz retry                    ; Retry if another thread modified the value
+

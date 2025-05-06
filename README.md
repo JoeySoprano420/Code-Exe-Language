@@ -261,6 +261,148 @@ loop_block:
 
 ---
 
+**Building CEL project on Windows**
+
+The user is asking for build instructions for a CEL project. To compile using the *celc* toolchain, I’ll guide them through converting CEL into NASM code, then assembling it with *nasm* for Windows x64, followed by linking with *gcc*. For this, I’ll include manual steps, environment requirements (like MSYS2 and mingw), and the command lines. A sample build script could also help. Once the *celc* toolchain is ready, I’ll add steps to compile the spec, but right now, this part can be skipped.
+
+
+Thought for 8 seconds
+
+
+Below are two fully‑worked build paths for **`main.cel`** on Windows x64, so you can choose the one that matches your current tool‑chain maturity.
+
+---
+
+## 1 · One‑Command Path (with the *celc* reference compiler)
+
+> Use this once you’ve built / downloaded the `celc` tool described in the spec.
+
+```powershell
+# 1. Compile, assemble, and link in a single step
+celc main.cel            # produces main.exe in the same folder
+
+# 2. Run
+.\main.exe
+```
+
+Under the hood `celc` performs:
+
+1. **Lex / Parse / Emit** → `main.asm`
+2. **Assemble**           → `main.obj`  (`nasm -f win64`)
+3. **Link**               → `main.exe`  (`gcc` / `lld-link`)
+
+You’ll see each intermediate file in a temporary `.celc` sub‑directory unless you pass `--keep-intermediate`.
+
+---
+
+## 2 · Manual Path (no *celc*, direct NASM + GCC)
+
+Use this while `celc` is still under construction—or if you’d like to inspect the generated assembly manually.
+
+### 2.1 Prerequisites
+
+| Tool     | Download / Install                                                                     |
+| -------- | -------------------------------------------------------------------------------------- |
+| **NASM** | [https://www.nasm.us](https://www.nasm.us) (Windows installer or `choco install nasm`) |
+| **GCC**  | MinGW‑w64 via MSYS2, MSVC with `lld-link`, or LLVM’s clang‑64                          |
+| **Make** | *Optional*—MSYS2/MinGW `make` or CMake if you prefer                                   |
+
+> Verify: `nasm -v`, `gcc --version`
+
+### 2.2 Steps
+
+1. **Convert `main.cel` → `main.asm`**
+   Until `celc` is ready, copy the “Reference Ultra‑Expanded Implementation” (§13 in the spec) and adapt the data/logic blocks by hand. Save as `main.asm`.
+
+2. **Assemble**
+
+   ```powershell
+   nasm -f win64 main.asm -o main.obj
+   ```
+
+3. **Link**
+
+   *With GCC/MinGW:*
+
+   ```powershell
+   gcc main.obj -o main.exe
+   ```
+
+   *With MSVC tools (x64 Native Tools Command Prompt):*
+
+   ```cmd
+   link /SUBSYSTEM:CONSOLE /ENTRY:main main.obj kernel32.lib msvcrt.lib
+   ```
+
+4. **Run & Verify**
+
+   ```powershell
+   .\main.exe
+   ```
+
+   You should see the accumulator result followed by the packed bit‑wise output line exactly as defined by the `printf` formats.
+
+---
+
+## 3 · Batch / PowerShell Convenience Scripts
+
+<details><summary>build.bat (simple)</summary>
+
+```bat
+@echo off
+set SRC=%1
+if "%SRC%"=="" ( set SRC=main )
+
+nasm -f win64 %SRC%.asm -o %SRC%.obj || goto :err
+gcc  %SRC%.obj -o %SRC%.exe       || goto :err
+echo ===== Build OK: %SRC%.exe =====
+exit /b 0
+:err
+echo Build failed.
+exit /b 1
+```
+
+</details>
+
+<details><summary>build.ps1 (shows timings)</summary>
+
+```powershell
+param([string]$src = "main")
+$sw = [Diagnostics.Stopwatch]::StartNew()
+
+nasm -f win64 "$src.asm" -o "$src.obj"  || exit 1
+gcc  "$src.obj" -o "$src.exe"           || exit 1
+
+$sw.Stop()
+Write-Host "✅ Built $src.exe in $($sw.Elapsed.TotalMilliseconds) ms"
+```
+
+</details>
+
+---
+
+## 4 · Directory Layout Recommendation
+
+```
+CELProject/
+├─ src/
+│  └─ main.cel
+├─ build/
+│  ├─ main.asm
+│  ├─ main.obj
+│  └─ main.exe
+└─ scripts/
+   └─ build.ps1
+```
+
+Add to `PATH`:
+
+```
+setx PATH "%PATH%;C:\msys64\mingw64\bin;C:\Program Files\NASM"
+```
+
+---
+
 ### © 2025 The CEL Project by Joey Soprano — Licensed under Modified Quick-Sample-Reference Long-code (QSRLC) License V2.0
 
 

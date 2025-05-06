@@ -1,0 +1,1 @@
+python celc.py -S main.cel       # stop after assembly

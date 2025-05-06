@@ -1,0 +1,27 @@
+[Main] {
+    counter          : SET  20;
+    increment        : SET  3;
+    accumulator      : SET  1;
+    mask             : SET  255;
+    shifted_left     : SHIFT_LEFT increment, 2;
+    shifted_right    : SHIFT_RIGHT shifted_left, 1;
+    bitwise_and      : AND shifted_left, mask;
+    bitwise_or       : OR shifted_left, accumulator;
+    bitwise_xor      : XOR shifted_left, mask;
+    bitwise_not      : NOT accumulator;
+    loop_counter     : LOOP counter, increment, accumulator;
+    final_result     : DISPLAY accumulator;
+    and_result       : DISPLAY bitwise_and;
+    or_result        : DISPLAY bitwise_or;
+    xor_result       : DISPLAY bitwise_xor;
+    not_result       : DISPLAY bitwise_not;
+    shl_result       : DISPLAY shifted_left;
+    shr_result       : DISPLAY shifted_right;
+}
+
+[LOOP_Block] {
+        accumulator : MUL increment;
+        counter     : SUB 1;
+        comparison  : COMPARE counter, 0;
+        continue    : JUMP_IF comparison, LOOP_Block;
+}

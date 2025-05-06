@@ -1,0 +1,176 @@
+; Ultra-Expanded CEL Grammar & Syntax Implementation — FULL FEATURE SET
+; Windows x64 NASM — Compile‑structured · Gated blocks · Office‑suite punctuation · Radial‑off‑grid indentation · 3‑Helixical spacing
+
+; -------------------------------------------------------------
+; Ultra‑Complete EBNF Grammar (Conceptual)
+; -------------------------------------------------------------
+; program        = {block};
+; block          = gate, '{', {statement, ';'}, '}';
+; gate           = '[', identifier, ']';
+; statement      = identifier, ':', operation, args;
+; operation      = "SET" | "ADD" | "SUB" | "MUL" | "DIV" | "DISPLAY" | "COMPARE" |
+;                  "JUMP_IF" | "LOOP" | "AND" | "OR" | "NOT" | "XOR" | "SHIFT_LEFT" | "SHIFT_RIGHT";
+; args           = identifier | number | identifier ',' identifier | identifier ',' number |
+;                  identifier ',' identifier ',' identifier;
+; identifier     = letter, {letter | digit | '_'};
+; number         = digit, {digit};
+; punctuation    = '{' | '}' | '[' | ']' | ':' | ';' | ',';
+
+; -------------------------------------------------------------
+; Ultra‑Expanded CEL Script Example (Intuitive‑Intrinsic Semantics)
+; -------------------------------------------------------------
+; [Main] {
+;     counter          : SET  20;
+;     increment        : SET  3;
+;     accumulator      : SET  1;
+;     mask             : SET  255;
+;     shifted_left     : SHIFT_LEFT increment, 2;
+;     shifted_right    : SHIFT_RIGHT shifted_left, 1;
+;     bitwise_and      : AND shifted_left, mask;
+;     bitwise_or       : OR shifted_left, accumulator;
+;     bitwise_xor      : XOR shifted_left, mask;
+;     bitwise_not      : NOT accumulator;
+;     loop_counter     : LOOP counter, increment, accumulator;
+;     final_result     : DISPLAY accumulator;
+;     and_result       : DISPLAY bitwise_and;
+;     or_result        : DISPLAY bitwise_or;
+;     xor_result       : DISPLAY bitwise_xor;
+;     not_result       : DISPLAY bitwise_not;
+;     shl_result       : DISPLAY shifted_left;
+;     shr_result       : DISPLAY shifted_right;
+; }
+;
+; [LOOP_Block] {
+;     accumulator : MUL increment;
+;     counter     : SUB 1;
+;     comparison  : COMPARE counter, 0;
+;     continue    : JUMP_IF comparison, LOOP_Block;
+; }
+
+; -------------------------------------------------------------
+; NASM Windows x64 Ultra‑Comprehensive Implementation
+; -------------------------------------------------------------
+
+section .data
+    fmt_accumulator db "Accumulator: %lld", 10, 0
+    fmt_and         db "AND Result: %lld", 10, 0
+    fmt_or          db "OR Result: %lld", 10, 0
+    fmt_xor         db "XOR Result: %lld", 10, 0
+    fmt_not         db "NOT Result: %lld", 10, 0
+    fmt_shl         db "SHL Result: %lld", 10, 0
+    fmt_shr         db "SHR Result: %lld", 10, 0
+
+section .bss
+    counter         resq 1
+    increment       resq 1
+    accumulator     resq 1
+    mask            resq 1
+    shifted_left    resq 1
+    shifted_right   resq 1
+    bitwise_and     resq 1
+    bitwise_or      resq 1
+    bitwise_xor     resq 1
+    bitwise_not     resq 1
+    comparison      resq 1
+
+section .text
+    extern printf
+    global  main
+
+main:
+    ; [Main] Gate Entry
+    mov     qword [counter],    20              ; counter  : SET 20
+    mov     qword [increment],  3               ; increment: SET 3
+    mov     qword [accumulator],1               ; accumulator: SET 1
+    mov     qword [mask],      255              ; mask     : SET 255
+
+    ; SHIFT_LEFT increment,2  → shifted_left
+    mov     rax, [increment]
+    shl     rax, 2
+    mov     [shifted_left], rax
+
+    ; SHIFT_RIGHT shifted_left,1 → shifted_right
+    mov     rax, [shifted_left]
+    shr     rax, 1
+    mov     [shifted_right], rax
+
+    ; AND shifted_left,mask → bitwise_and
+    mov     rax, [shifted_left]
+    and     rax, [mask]
+    mov     [bitwise_and], rax
+
+    ; OR shifted_left,accumulator → bitwise_or
+    mov     rax, [shifted_left]
+    or      rax, [accumulator]
+    mov     [bitwise_or], rax
+
+    ; XOR shifted_left,mask → bitwise_xor
+    mov     rax, [shifted_left]
+    xor     rax, [mask]
+    mov     [bitwise_xor], rax
+
+    ; NOT accumulator → bitwise_not
+    mov     rax, [accumulator]
+    not     rax
+    mov     [bitwise_not], rax
+
+LOOP_Block:
+    ; accumulator : MUL increment
+    mov     rax, [accumulator]
+    imul    rax, [increment]
+    mov     [accumulator], rax
+
+    ; counter : SUB 1
+    mov     rax, [counter]
+    sub     rax, 1
+    mov     [counter], rax
+
+    ; comparison : COMPARE counter,0
+    cmp     rax, 0
+    jne     LOOP_Block                           ; JUMP_IF → LOOP_Block
+
+    ; ---------- Display Results ----------
+    ; DISPLAY accumulator
+    mov     rcx, fmt_accumulator
+    mov     rdx, [accumulator]
+    xor     rax, rax
+    call    printf
+
+    ; DISPLAY bitwise_and
+    mov     rcx, fmt_and
+    mov     rdx, [bitwise_and]
+    xor     rax, rax
+    call    printf
+
+    ; DISPLAY bitwise_or
+    mov     rcx, fmt_or
+    mov     rdx, [bitwise_or]
+    xor     rax, rax
+    call    printf
+
+    ; DISPLAY bitwise_xor
+    mov     rcx, fmt_xor
+    mov     rdx, [bitwise_xor]
+    xor     rax, rax
+    call    printf
+
+    ; DISPLAY bitwise_not
+    mov     rcx, fmt_not
+    mov     rdx, [bitwise_not]
+    xor     rax, rax
+    call    printf
+
+    ; DISPLAY shifted_left
+    mov     rcx, fmt_shl
+    mov     rdx, [shifted_left]
+    xor     rax, rax
+    call    printf
+
+    ; DISPLAY shifted_right
+    mov     rcx, fmt_shr
+    mov     rdx, [shifted_right]
+    xor     rax, rax
+    call    printf
+
+    xor     rax, rax
+    ret

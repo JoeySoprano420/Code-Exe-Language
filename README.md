@@ -169,7 +169,8 @@ Assembled output prints `136` (0x88).
 
 Below is a fully‑working reference assembly file (`cel_ultra.asm`) that exercises every operation defined in the v1.0 spec.
 
-##nasm##
+## nasm ##
+
 ; CEL Ultra‑Expanded Reference Implementation
 ; Assemble: nasm -f win64 cel_ultra.asm -o cel_ultra.obj
 ; Link    : gcc  cel_ultra.obj -o cel_ultra.exe

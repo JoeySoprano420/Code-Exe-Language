@@ -1,0 +1,3 @@
+python celc.py main.cel          # → main.exe
+.\main.exe
+

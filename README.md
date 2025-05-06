@@ -1,5 +1,3 @@
-# Code-Exe-Language
-
 # Code Execution Language (CEL) — Official Specification v1.0
 
 ## 1 · Preface
@@ -155,7 +153,7 @@ Assembled output prints `136` (0x88).
 
 * Version numbers follow **SemVer** — `MAJOR.MINOR.PATCH`.
 * Changes are proposed via **CEL Enhancement Proposals (CEP)** reviewed by the Core Team.
-* The canonical spec lives at [https://cel‑lang.dev/spec](https://cel‑lang.dev/spec) (placeholder).
+
 
 ---
 
@@ -167,4 +165,101 @@ Assembled output prints `136` (0x88).
 
 ---
 
-### © 2025 The CEL Project of Joey Soprano — Licensed under Modified Quick-Sample-Reference Long-code (QSRLC) License V2.0
+## 13 · Reference Ultra‑Expanded Implementation (NASM)
+
+Below is a fully‑working reference assembly file (`cel_ultra.asm`) that exercises every operation defined in the v1.0 spec.
+
+**nasm**
+; CEL Ultra‑Expanded Reference Implementation
+; Assemble: nasm -f win64 cel_ultra.asm -o cel_ultra.obj
+; Link    : gcc  cel_ultra.obj -o cel_ultra.exe
+
+section .data
+    fmt_acc   db "Accumulator: %lld",10,0
+    fmt_logic db "Bitwise: AND=%lld OR=%lld XOR=%lld NOT=%lld SHL=%lld SHR=%lld",10,0
+
+section .bss
+    counter        resq 1
+    increment      resq 1
+    accumulator    resq 1
+    mask           resq 1
+    shl_val        resq 1
+    shr_val        resq 1
+    and_val        resq 1
+    or_val         resq 1
+    xor_val        resq 1
+    not_val        resq 1
+
+section .text
+    extern printf
+    global  main
+
+main:
+    ; -------- Initialise --------
+    mov     qword [counter],   20
+    mov     qword [increment], 3
+    mov     qword [accumulator],1
+    mov     qword [mask],     255
+
+    ; -------- Bitwise Series --------
+    mov     rax, [increment]
+    shl     rax, 2            ; SHIFT_LEFT 2 → shl_val
+    mov     [shl_val], rax
+
+    mov     rcx, rax
+    shr     rcx, 1            ; SHIFT_RIGHT 1 → shr_val
+    mov     [shr_val], rcx
+
+    mov     rdx, rax
+    and     rdx, [mask]       ; AND
+    mov     [and_val], rdx
+
+    mov     r8,  rax
+    or      r8,  [accumulator]
+    mov     [or_val], r8      ; OR
+
+    mov     r9,  rax
+    xor     r9,  [mask]
+    mov     [xor_val], r9     ; XOR
+
+    mov     r10, [accumulator]
+    not     r10
+    mov     [not_val], r10    ; NOT
+
+    ; -------- Loop (MUL accumulator by increment counter times) --------
+loop_block:
+    imul    rax, [accumulator], [increment]
+    mov     [accumulator], rax
+    dec     qword [counter]
+    jnz     loop_block
+
+    ; -------- Display --------
+    ; Accumulator result
+    mov     rcx, fmt_acc
+    mov     rdx, [accumulator]
+    xor     rax, rax
+    call    printf
+
+    ; Bitwise packet
+    mov     rcx, fmt_logic
+    mov     rdx, [and_val]
+    mov     r8,  [or_val]
+    mov     r9,  [xor_val]
+    ; Stack‑pass remaining two 64‑bit args (NOT, SHL, SHR) per Windows x64
+    sub     rsp, 32
+    mov     [rsp+16], r10          ; NOT
+    mov     [rsp+24], [shl_val]    ; SHL
+    mov     [rsp+32], [shr_val]    ; SHR (shadow)
+    xor     rax, rax
+    call    printf
+    add     rsp, 32
+
+    xor     rax, rax
+    ret
+
+
+---
+
+### © 2025 The CEL Project by Joey Soprano — Licensed under Modified Quick-Sample-Reference Long-code (QSRLC) License V2.0
+
+

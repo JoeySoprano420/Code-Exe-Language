@@ -683,6 +683,82 @@ CEL reinterprets Assembly into a structured format while keeping its raw power i
 
 So CEL is closer to how structured assembly languages (like MASM) organize low-level code, rather than being a direct evolution like C++ is to C.
 
+##**## **##** ##**## **##**
+
+Let's compare **CEL and raw Assembly** side by side with a simple example.
+
+### **Task: Multiplication and Conditional Jump**
+This program will:
+1. Multiply two numbers.
+2. Compare the result to a threshold.
+3. Jump to a specific section based on the comparison.
+
+---
+
+### **CEL Code**
+CEL's structured approach makes assembly more readable while still compiling directly into NASM.
+
+```cel
+[Main] {
+    num1 : SET 6;
+    num2 : SET 7;
+    result : MUL num1, num2;
+    threshold : SET 40;
+    comparison : COMPARE result, threshold;
+    check : JUMP_IF comparison, AboveThreshold;
+}
+
+[AboveThreshold] {
+    message : DISPLAY "Result is above threshold!";
+}
+```
+
+---
+
+### **Equivalent Assembly Code (NASM)**
+This NASM version does the exact same thing but is **more verbose** and lacks CEL’s structured readability.
+
+```assembly
+section .data
+    fmt db "Result is above threshold!", 0
+
+section .bss
+    result resq 1
+
+section .text
+global main
+main:
+    mov rax, 6
+    imul rax, 7
+    mov [result], rax
+    cmp rax, 40
+    jg above_threshold
+    ret
+
+above_threshold:
+    mov rdi, fmt
+    call printf
+    ret
+```
+
+---
+
+### **Comparison**
+| Feature | **CEL** | **Assembly (NASM)** |
+|---------|--------|-------------------|
+| **Readability** | Structured, easy to follow | Lower-level, harder to read |
+| **Memory Management** | Automatic (static allocation) | Manual (explicit allocation) |
+| **Branching** | Uses `JUMP_IF` for structured jumps | Uses `CMP` and `JMP` manually |
+| **Arithmetic** | Simple operations (`SET`, `MUL`, `COMPARE`) | Uses registers (`MOV`, `IMUL`, `CMP`) |
+| **Ease of Debugging** | Easier due to structured formatting | Requires deep assembly knowledge |
+
+### **Key Takeaways**
+- **CEL** is **more readable**, making structured assembly programming easier.
+- **NASM** gives **fine-grained control** but requires **manual memory and branching**.
+- **Performance is identical** since CEL **directly translates to NASM**.
+
+
+
 
 ### © 2025 The CEL Project by Joey Soprano — Licensed under Modified Quick-Sample-Reference Long-code (QSRLC) License V2.0
 
